@@ -1,3 +1,11 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['error'] = "Please login first.";
+    header("Location: login.php");
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
@@ -29,6 +37,7 @@
                 <div class="d-grid gap-3">
                     <a href="upload.php" class="btn btn-primary btn-lg fw-medium">Upload File</a>
                     <a href="list.php" class="btn btn-outline-secondary text-white btn-lg fw-medium">View Uploads</a>
+                    <a href="logout.php" class="btn btn-outline-danger text-white btn-lg fw-medium">Logout</a>
                 </div>
             </div>
         </div>

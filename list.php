@@ -1,3 +1,43 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['error'] = "Please login first.";
+    header("Location: login.php");
+    exit();
+}
+
+$error = $_SESSION['error'] ?? '';
+$success = $_SESSION['success'] ?? '';
+unset($_SESSION['error'], $_SESSION['success']);
+
+$user_id = $_SESSION['user_id'];
+
+$conn = new mysqli('localhost', 'root', '', 'tugas2');
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+$stmt = $conn->prepare(
+    "SELECT id, original_name, file_size, uploaded_at
+     FROM files
+     WHERE user_id = ?
+     ORDER BY uploaded_at DESC"
+);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$files = $result->fetch_all(MYSQLI_ASSOC);
+
+$stmt->close();
+$conn->close();
+
+//formatting file size
+function formatSize($bytes) {
+    if ($bytes >= 1048576) return round($bytes / 1048576, 2) . ' MB';
+    if ($bytes >= 1024)    return round($bytes / 1024, 1) . ' KB';
+    return $bytes . ' B';
+}
+?>
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
@@ -61,36 +101,24 @@
                                 </thead>
                                 <tbody>
                                     <!-- List of uploaded files will be populated here you can delete it after implementing the backend logic -->
-                                    <!-- Dummy Data 1 -->
-                                    <tr>
-                                        <td class="ps-4 py-3 text-white">document_secret.pdf</td>
-                                        <td class="py-3 text-white-50">2.4 MB</td>
-                                        <td class="py-3 text-white-50">Sep 04, 2026</td>
-                                        <td class="text-end pe-4 py-3">
-                                            <a href="#" class="btn btn-sm btn-outline-info me-1">Download</a>
-                                            <a href="#" class="btn btn-sm btn-outline-danger">Delete</a>
-                                        </td>
-                                    </tr>
-                                    <!-- Dummy Data 2 -->
-                                    <tr>
-                                        <td class="ps-4 py-3 text-white">image_backup.png</td>
-                                        <td class="py-3 text-white-50">5.1 MB</td>
-                                        <td class="py-3 text-white-50">Sep 02, 2026</td>
-                                        <td class="text-end pe-4 py-3">
-                                            <a href="#" class="btn btn-sm btn-outline-info me-1">Download</a>
-                                            <a href="#" class="btn btn-sm btn-outline-danger">Delete</a>
-                                        </td>
-                                    </tr>
-                                    <!-- Dummy Data 3 -->
-                                    <tr>
-                                        <td class="ps-4 py-3 text-white">archive_data.zip</td>
-                                        <td class="py-3 text-white-50">128 MB</td>
-                                        <td class="py-3 text-white-50">Aug 28, 2026</td>
-                                        <td class="text-end pe-4 py-3">
-                                            <a href="#" class="btn btn-sm btn-outline-info me-1">Download</a>
-                                            <a href="#" class="btn btn-sm btn-outline-danger">Delete</a>
-                                        </td>
-                                    </tr>
+                                    <?php if (count($files) > 0): ?>
+                                        <?php foreach ($files as $file): ?>
+                                            <tr>
+                                                <td class="ps-4 py-3 text-white"><?= htmlspecialchars($file['original_name']) ?></td>
+                                                <td class="py-3 text-white-50"><?= formatSize($file['file_size']) ?></td>
+                                                <td class="py-3 text-white-50"><?= htmlspecialchars($file['uploaded_at']) ?></td>
+                                                <td class="text-end pe-4 py-3">
+                                                <a href="download.php?id=<?= (int)$file['id'] ?>" class="btn btn-sm btn-outline-info me-1">Download</a>
+                                                <a href="delete.php?id=<?= (int)$file['id'] ?>" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('Delete this file?')">Delete</a>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <tr>
+                                            <td colspan="4" class="text-center py-4 text-white-50">No files uploaded yet.</td>
+                                        </tr>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -98,8 +126,7 @@
                 </div>
                 
                 <div class="text-center mt-4">
-                    <p class="text-white-50 small">Showing 3 files in your vault.</p>
-                </div>
+                    <p class="text-white-50 small">Showing <?= count($files) ?> files in your vault.</p>
             </div>
         </div>
     </div>

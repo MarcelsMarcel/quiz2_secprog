@@ -1,3 +1,9 @@
+<?php
+session_start();
+
+$error = $_SESSION['error'] ?? '';
+unset($_SESSION['error']);
+?>
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
@@ -38,8 +44,13 @@
             <div class="card-body p-5">
                 <h3 class="card-title fw-semibold text-white mb-1 text-center">Create Account</h3>
                 <p class="text-white-50 mb-4 text-center">Join us to store your files securely.</p>
-                
-                <form action="#" method="POST">
+                <?php if ($error !== ''): ?>
+                    <div class="alert alert-danger py-2" role="alert">
+                        <?= htmlspecialchars($error) ?>
+                    </div>
+                <?php endif; ?>
+
+                <form action="doRegister.php" method="POST">
                     <div class="mb-3">
                         <label for="username" class="form-label text-white-50 small mb-1">Username</label>
                         <input type="text" class="form-control" id="username" name="username" placeholder="Choose a username" required>
@@ -62,6 +73,8 @@
                     <div class="text-center mt-4">
                         <span class="text-white-50 small">Already have an account? </span>
                         <a href="login.php" class="text-decoration-none text-primary small">Login here</a>
+                    </div>
+                    <div class="mt-3">
                     </div>
                 </form>
             </div>

@@ -1,3 +1,14 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['error'] = "Please login first.";
+    header("Location: login.php");
+    exit();
+}
+
+$error = $_SESSION['error'] ?? '';
+unset($_SESSION['error']);
+?>
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
@@ -43,7 +54,14 @@
                 </div>
                 <p class="text-white-50 mb-4">Select a file to securely store it in your vault.</p>
                 
-                <form action="list.php" method="POST" enctype="multipart/form-data">
+                <?php if (isset($_SESSION['error'])): ?>
+                    <div class="alert alert-danger py-2" role="alert">
+                        <?= htmlspecialchars($_SESSION['error']) ?>
+                    </div>
+                    <?php unset($_SESSION['error']); ?>
+                <?php endif; ?>
+
+                <form action="doUpload.php" method="POST" enctype="multipart/form-data">
                     <div class="mb-4">
                         <label for="fileUpload" class="form-label text-white-50 small mb-1">Choose File</label>
                         <input class="form-control" type="file" id="fileUpload" name="fileUpload" required>
